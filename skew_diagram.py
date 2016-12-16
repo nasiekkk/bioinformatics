@@ -91,6 +91,9 @@ def numberToSymbol(number):
         return "G"
     return "T"
 
+def remove_duplicates(l):
+    return list(set(l))
+
 def findFrequentWordWithMismatches(Text, k, d):
     FrequentPatterns = set()
     Neighborhoods = []
@@ -125,12 +128,14 @@ def FrequentWordWithMismatches(Text, k, d):
     neighborhoodArray = []
     count = []
     index = []
-
-    for j in range(len(Text) - k):
+    for j in range(len(Text) - k + 1):
         bb = findNeighbours(Text[j:j+k], d)
-        c = list(bb)
-        for a in c:
-            Neighborhoods.append(a)
+        c = list([bb])
+        if len(bb) == 1:
+            Neighborhoods[:0] = [c]
+        else:
+            for elem in c:
+                Neighborhoods.append(elem)
         for p in range(len(Neighborhoods)):
             neighborhoodArray.append(Neighborhoods[p])
     for i in range(len(Neighborhoods)):
@@ -140,15 +145,15 @@ def FrequentWordWithMismatches(Text, k, d):
     sortedIndex = index[:]
     sortedIndex.sort()
     for l in range(len(Neighborhoods) - 1):
-        if(sortedIndex[l] == sortedIndex[l+1]):
+        if sortedIndex[l] == sortedIndex[l+1]:
             count[l+1] = count[l] + 1
     maxCount = max(count)
-    for i in range(len(Neighborhoods) - 1):
+    for i in range(len(Neighborhoods)):
         if count[i] == maxCount:
             pattern = numberToPattern(sortedIndex[i], k)
             FrequentPatterns.add(pattern)
     return FrequentPatterns
-dna = "AATTAATTGGTAGGTAGGTA"
-a = FrequentWordWithMismatches(dna, 4, 0)
-print(len(a))
-print(a)
+#dna = "AGTCAGCT"
+#a = FrequentWordWithMismatches(dna, 4, 2)
+#print(len(a))
+#print(a)

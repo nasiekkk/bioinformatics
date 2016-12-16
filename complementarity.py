@@ -17,8 +17,3 @@ def revert(str):
     for i in range(len(str)):
         result = result + str[len(str)-i-1]
     return result
-
-dna = "GATTACA"
-
-a = find_complementary(dna)
-print(a)
