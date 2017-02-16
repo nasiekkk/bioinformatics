@@ -1,19 +1,21 @@
+from itertools import product
+import math
 
-def findInitialKmer(kmerArray):
+def findLastKmer(kmerArray):
     for kmer in kmerArray:
         counter = 0
         k = len(kmerArray[0])
         for i in range(len(kmerArray)):
-            if kmer[1:] == kmerArray[i][0:k - 2]:
+            aaa = kmerArray[i]
+            if kmer[1:] == aaa[0:k - 1]:
                 counter += 1
                 break
     if counter == 0:
         return kmer
 
-
 def ReconstructString(kmerArray):
     k = len(kmerArray[0])
-    dna = findInitialKmer(kmerArray)
+    dna = findLastKmer(kmerArray)
     kmerArray.remove(dna)
     #  while(len(kmerArray) > 1):
     length = len(kmerArray)
@@ -39,7 +41,7 @@ def OverlapGraph(kmerArray):
     del result[lastElem]
     return kmerArray[0], result
 
-def DeBruijn(Text):
+def DeBruijnFromArray(Text):
     textArray = [elem[:-1] for elem in Text]
     result = dict.fromkeys(textArray)
     for key in result:
@@ -61,8 +63,9 @@ def DeBruijn(k, Text):
           result[key] = [elem[:-1]]
   return result
 
-def EulerianCycle(graph_dict):
+def EulerianCycle(graph_dict, firstKey):
     currentNode = list(graph_dict.keys())[0]
+    #graph_dict[firstKey] = graph_dict[firstKey][1:]
     path = [currentNode]
     while True:
         path.append(list(graph_dict[currentNode])[0])
@@ -92,55 +95,58 @@ def EulerianCycle(graph_dict):
                 path = path[:i] + middleCycle + path[i+1:]
     return path
 
-def EulerianCycle(graph_dict, firstKey):
-    currentNode = list(graph_dict[firstKey])[0]
-    graph_dict[firstKey] = graph_dict[firstKey][1:]
-    path = [firstKey, currentNode]
-    while True:
-        path.append(list(graph_dict[currentNode])[0])
-        if len(graph_dict[currentNode]) == 1:
-            del graph_dict[currentNode]
+def EulerianPath(graph):
+  result = []
+  result.append(list(graph.keys())[0])
+  while graph:
+    currentKey = result[-1]
+    if graph[currentKey]:
+      result.append(graph[currentKey])
+      if len(graph[currentKey] > 1):
+        del graph[currentKey]
+      currentKey = result[-1]
+  return result
+
+def FindFirstKey(kmerArray):
+    for kmer in kmerArray:
+        counter = 0
+        k = len(kmerArray[0])
+        for i in range(len(kmerArray)):
+            if kmer[:k-1] == kmerArray[i][1:]:
+                counter += 1
+                break
+        if counter == 0:
+            return kmer
+
+def StringReconstructionUsingEulerDeBruijn(k, kmerArray):
+    result = ""
+    firstKey = FindFirstKey(kmerArray)
+    graph = DeBruijnFromArray(kmerArray)
+    sortedKmers = EulerianCycle(graph, firstKey[:-1])
+    for i in range(len(sortedKmers)-1):
+        result = result + sortedKmers[i][0]
+    return result + sortedKmers[len(sortedKmers)-1]
+
+def UniversalCircularString(k):
+    graph = {}
+    for kmer in [''.join(item) for item in product('01', repeat=k)]:
+        if kmer[:-1] in graph:
+            graph[kmer[:-1]].append(kmer[1:])
         else:
-            graph_dict[currentNode] = graph_dict[currentNode][1:]
-        if path[-1] in graph_dict:
-            currentNode = path[-1]
-        else:
-            break
-    while len(graph_dict) > 1:
-        for i in range(len(path)):
-            if path[i] in graph_dict:
-                currentNode = path[i]
-                middleCycle = [currentNode]
-                while True:
-                    middleCycle.append(list(graph_dict[currentNode])[0])
-                    if len(graph_dict[currentNode]) == 1:
-                        del graph_dict[currentNode]
-                    else:
-                        graph_dict[currentNode] = graph_dict[currentNode][1:]
-                    if middleCycle[-1] in graph_dict:
-                        currentNode = middleCycle[-1]
-                    else:
-                        break
-                path = path[:i] + middleCycle + path[i+1:]
-    return path
+            graph[kmer[:-1]] = [kmer[1:]]
+    #firstKey = list(graph.keys())[0]
+    path = EulerianCycle(graph, '0')
+    result = path[0][0]
+    for i in range(1, len(path)):
+        result = result + path[i][:-1]
+    return result + path[len(path)-1][:-1]
 
-
-def EulerianPath(graph_dict):
-    first = findUnbalancedNode(graph_dict)
-    #del graph_dict[first]
-    #del graph_dict[last]
-    path = EulerianCycle(graph_dict, first)
-    return path
-
-def findUnbalancedNode(graph):
-    inDegree = -1
-    values = []
-    for i in graph:
-        for value in graph[i]:
-            values.append(value)
-    keys = set(graph.keys())
-    for key in keys:
-        valueCounter = values.count(key)
-        if valueCounter < len(graph[key]):
-            inDegree = key
-    return inDegree
+def StringSpelledByGappedPatterns(k, d, patternArray):
+    result = ''
+    i = 0
+    for i in range(0, len(patternArray), k):
+        result = result + patternArray[i][0]
+    result = result[:-(i-d)]
+    for j in range(0, len(patternArray), k):
+        result = result + patternArray[j][1]
+    return result
